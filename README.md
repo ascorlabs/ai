@@ -2,7 +2,7 @@
 
 > An AI-powered biological research assistant that connects to live open-source databases, intelligently routes queries, and synthesizes answers using Claude AI.
 
-![Platform](https://img.shields.io/badge/Platform-Web-teal) ![License](https://img.shields.io/badge/License-MIT-green) ![Status](https://img.shields.io/badge/Status-Live-brightgreen) ![AI](https://img.shields.io/badge/AI-Claude%20Sonnet%204-blue)
+![Platform](https://img.shields.io/badge/Platform-Web-teal) ![Status](https://img.shields.io/badge/Status-Live-brightgreen) ![AI](https://img.shields.io/badge/AI-Claude%20Sonnet%204-blue)
 
 ---
 
@@ -260,10 +260,6 @@ We welcome contributions — especially new biological data source plugins. Plea
 - 📞 +91 7569184252
 
 ---
-
-## 📄 License
-
-MIT License — free to use, modify, and distribute with attribution.
 
 ---
 
