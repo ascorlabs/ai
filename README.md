@@ -11,9 +11,18 @@ Synthesis Layer — Claude receives the live data fetched from all matched sourc
 
 6 live sources connected right now:
 ==================================
-UniProt — protein function & sequences
-NCBI Gene — gene summaries & chromosomal data
-Open Targets — disease–drug target associations
-PubMed — recent organoid/iPSC literature
-ChEMBL — bioactive drug compounds
-Ensembl — genome annotations & gene IDs
+1. UniProt — protein function & sequences
+2. NCBI Gene — gene summaries & chromosomal data
+3. Open Targets — disease–drug target associations
+4. PubMed — recent organoid/iPSC literature
+5. ChEMBL — bioactive drug compounds
+6. Ensembl — genome annotations & gene IDs
+
+Code Structure:
+===============
+ascor-deploy/
+├── public/index.html          ← The full Bio Intelligence app
+├── netlify/functions/
+│   └── claude-proxy.js        ← Secure backend proxy
+├── netlify.toml               ← Auto-config for Netlify
+└── README.md                  ← Full step-by-step guide
