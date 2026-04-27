@@ -8,7 +8,7 @@
 
 ## 🌐 Live Demo
 
-**[bioai.ascorlabs.com](https://bioai.ascorlabs.com)** — Ask anything about genes, proteins, organoids, drug targets, stem cells, and more.
+**[ai.ascorlabs.com](https://aiascorlabscom.netlify.app/)** — Ask anything about genes, proteins, organoids, drug targets, stem cells, and more.
 
 ---
 
