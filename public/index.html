@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASCOR Labs — Bio Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#060910; --bg1:#0b0f18; --bg2:#111720; --bg3:#182030;
+  --teal:#00d4b8; --teal2:#00ffdf; --teal-a:rgba(0,212,184,0.12);
+  --teal-b:rgba(0,212,184,0.06);
+  --amber:#f5a623; --amber-a:rgba(245,166,35,0.12);
+  --rose:#ff5e7e; --rose-a:rgba(255,94,126,0.1);
+  --blue:#4fc3f7; --blue-a:rgba(79,195,247,0.1);
+  --purple:#b39ddb; --purple-a:rgba(179,157,219,0.1);
+  --green:#69db7c; --green-a:rgba(105,219,124,0.1);
+  --border:rgba(0,212,184,0.15);
+  --text:#dde8e6; --text2:#7a9e98; --text3:#3a5a55;
+  --mono:'IBM Plex Mono',monospace; --display:'Syne',sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg0);color:var(--text);font-family:var(--display);display:flex;flex-direction:column}
+
+/* Scanlines texture */
+body::after{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;z-index:9999
+}
+
+/* HEADER */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:56px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  background:rgba(6,9,16,0.98);backdrop-filter:blur(16px);
+  position:relative;z-index:100
+}
+.hlogo{display:flex;align-items:center;gap:10px}
+.hlogo-mark{
+  width:32px;height:32px;border:1.5px solid var(--teal);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;background:var(--teal-a)
+}
+.hlogo-name{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--teal2);letter-spacing:.1em}
+.hlogo-sub{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.05em}
+.hstatus{display:flex;align-items:center;gap:16px}
+.hstat{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text2)}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot-live{background:var(--teal2);animation:blink 2s infinite}
+.dot-warn{background:var(--amber)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* LAYOUT */
+.shell{display:flex;flex:1;overflow:hidden}
+
+/* LEFT PANEL — Source Registry */
+.panel-left{
+  width:280px;flex-shrink:0;
+  border-right:1px solid var(--border);
+  background:var(--bg1);
+  display:flex;flex-direction:column;overflow:hidden
+}
+.panel-title{
+  padding:14px 16px 10px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  color:var(--text3);text-transform:uppercase;
+  border-bottom:1px solid rgba(0,212,184,0.08);
+  display:flex;align-items:center;justify-content:space-between
+}
+.add-btn{
+  background:var(--teal-a);border:1px solid var(--border);
+  border-radius:5px;padding:3px 8px;font-size:10px;font-family:var(--mono);
+  color:var(--teal);cursor:pointer;transition:.15s
+}
+.add-btn:hover{background:rgba(0,212,184,0.2)}
+
+.sources-list{flex:1;overflow-y:auto;padding:10px}
+.sources-list::-webkit-scrollbar{width:3px}
+.sources-list::-webkit-scrollbar-thumb{background:var(--border)}
+
+.source-card{
+  border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:8px;overflow:hidden;transition:.2s;
+  background:var(--bg2)
+}
+.source-card.disabled{opacity:.45}
+.source-head{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;cursor:pointer
+}
+.source-head:hover{background:var(--teal-b)}
+.source-icon{
+  width:28px;height:28px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0
+}
+.source-info{flex:1;min-width:0}
+.source-name{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);line-height:1.2}
+.source-type{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.toggle-wrap{position:relative;width:30px;height:16px;flex-shrink:0}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--bg3);
+  border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:.2s
+}
+.toggle-slider::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--text3);transition:.2s
+}
+.toggle-wrap input:checked+.toggle-slider{background:var(--teal-a);border-color:var(--teal)}
+.toggle-wrap input:checked+.toggle-slider::after{transform:translateX(14px);background:var(--teal2)}
+
+.source-tags{padding:0 12px 10px;display:flex;gap:4px;flex-wrap:wrap}
+.stag{
+  font-size:9px;font-family:var(--mono);padding:2px 7px;
+  border-radius:4px;letter-spacing:.04em
+}
+
+/* Filter info */
+.filter-box{
+  margin:0 10px 10px;border:1px solid rgba(245,166,35,0.25);
+  border-radius:var(--r);background:rgba(245,166,35,0.05);padding:12px
+}
+.filter-title{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  color:var(--amber);margin-bottom:6px;text-transform:uppercase
+}
+.filter-desc{font-size:11px;color:var(--text2);line-height:1.6}
+
+/* MAIN CHAT */
+.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+.messages{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px}
+.messages::-webkit-scrollbar{width:3px}
+.messages::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* Welcome */
+.welcome{
+  margin:auto;max-width:560px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 20px
+}
+.w-orb{
+  width:80px;height:80px;border-radius:50%;
+  border:1.5px solid var(--teal);background:var(--teal-a);
+  display:flex;align-items:center;justify-content:center;
+  animation:orbit 6s linear infinite
+}
+@keyframes orbit{0%{box-shadow:0 0 0 0 rgba(0,212,184,0.3)}50%{box-shadow:0 0 30px 8px rgba(0,212,184,0.1)}100%{box-shadow:0 0 0 0 rgba(0,212,184,0.3)}}
+.w-title{font-size:24px;font-weight:800;color:var(--teal2);letter-spacing:-.02em}
+.w-desc{font-size:13px;color:var(--text2);line-height:1.8;max-width:440px}
+.arch-diagram{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px
+}
+.arch-node{
+  font-family:var(--mono);font-size:10px;padding:4px 10px;
+  border-radius:5px;border:1px solid;letter-spacing:.04em
+}
+.arch-arrow{color:var(--text3);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px}
+.chip{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;padding:5px 12px;font-size:11px;font-family:var(--mono);
+  color:var(--text2);cursor:pointer;transition:.15s
+}
+.chip:hover{background:var(--teal-a);border-color:var(--teal);color:var(--teal2)}
+
+/* Messages */
+.msg{display:flex;gap:12px;align-items:flex-start;animation:fadeUp .25s ease}
+.msg.user{flex-direction:row-reverse}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.avatar{
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;font-weight:600;flex-shrink:0
+}
+.msg.assistant .avatar{background:var(--teal-a);border:1px solid var(--border);color:var(--teal)}
+.msg.user .avatar{background:var(--amber-a);border:1px solid rgba(245,166,35,.25);color:var(--amber)}
+
+.bubble{
+  max-width:74%;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 16px;font-size:13.5px;line-height:1.8
+}
+.msg.user .bubble{background:var(--bg3);border-color:rgba(245,166,35,.2)}
+.bubble p{margin-bottom:8px}.bubble p:last-child{margin-bottom:0}
+.bubble strong{color:var(--teal2);font-weight:600}
+.bubble code{
+  background:var(--teal-a);border:1px solid var(--border);
+  border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:11.5px;color:var(--teal2)
+}
+.bubble ul,.bubble ol{padding-left:18px;margin:6px 0}
+.bubble li{margin-bottom:4px}
+.bubble h3{
+  font-family:var(--mono);font-size:11px;color:var(--teal);
+  margin:12px 0 6px;letter-spacing:.06em;text-transform:uppercase
+}
+
+/* Source pipeline trace */
+.pipeline-trace{
+  margin-top:12px;border-top:1px solid var(--border);padding-top:10px;
+  display:flex;flex-direction:column;gap:6px
+}
+.trace-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;margin-bottom:4px}
+.trace-sources{display:flex;gap:6px;flex-wrap:wrap}
+.trace-src{
+  display:flex;align-items:center;gap:5px;
+  padding:3px 8px;border-radius:5px;
+  font-family:var(--mono);font-size:10px;border:1px solid
+}
+.trace-src.hit{color:var(--teal);border-color:rgba(0,212,184,.3);background:var(--teal-a)}
+.trace-src.miss{color:var(--text3);border-color:rgba(255,255,255,.05)}
+.trace-src.claude{color:var(--blue);border-color:rgba(79,195,247,.3);background:var(--blue-a)}
+.trace-src.error{color:var(--rose);border-color:rgba(255,94,126,.3);background:var(--rose-a)}
+
+/* Typing */
+.typing{display:flex;gap:5px;align-items:center;padding:10px 14px}
+.td{width:7px;height:7px;background:var(--teal);border-radius:50%;animation:tp 1.1s infinite}
+.td:nth-child(2){animation-delay:.18s}.td:nth-child(3){animation-delay:.36s}
+@keyframes tp{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* Status bar during processing */
+.status-bar{
+  margin:0 28px 0;padding:8px 14px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg2);font-family:var(--mono);font-size:11px;
+  color:var(--text2);display:none;gap:10px;align-items:center;flex-wrap:wrap
+}
+.status-bar.active{display:flex}
+.status-step{
+  display:flex;align-items:center;gap:5px;padding:2px 8px;
+  border-radius:4px;font-size:10px;transition:.3s
+}
+.status-step.pending{color:var(--text3)}
+.status-step.active{color:var(--teal2);background:var(--teal-a)}
+.status-step.done{color:var(--green);background:var(--green-a)}
+.status-step.skip{color:var(--text3);text-decoration:line-through}
+
+/* Input */
+.input-area{
+  padding:14px 24px 18px;border-top:1px solid var(--border);
+  background:rgba(6,9,16,.97);backdrop-filter:blur(12px);flex-shrink:0
+}
+.input-wrap{
+  display:flex;align-items:flex-end;gap:10px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;transition:.2s
+}
+.input-wrap:focus-within{border-color:var(--teal)}
+textarea{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:var(--display);font-size:13.5px;
+  resize:none;line-height:1.6;max-height:120px;min-height:22px
+}
+textarea::placeholder{color:var(--text3)}
+.send-btn{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--teal);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:#060910;flex-shrink:0;transition:.15s;font-size:14px
+}
+.send-btn:hover{background:var(--teal2)}
+.send-btn:disabled{opacity:.3;cursor:not-allowed}
+.input-hint{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:7px;font-size:10px;color:var(--text3);font-family:var(--mono)
+}
+
+/* RIGHT PANEL — Activity log */
+.panel-right{
+  width:240px;flex-shrink:0;
+  border-left:1px solid var(--border);
+  background:var(--bg1);display:flex;flex-direction:column;overflow:hidden
+}
+.log-list{flex:1;overflow-y:auto;padding:8px}
+.log-list::-webkit-scrollbar{width:3px}
+.log-list::-webkit-scrollbar-thumb{background:var(--border)}
+.log-entry{
+  padding:8px 10px;border-radius:7px;margin-bottom:4px;
+  border:1px solid rgba(255,255,255,.04);
+  font-family:var(--mono);font-size:10px;line-height:1.6
+}
+.log-time{color:var(--text3);margin-bottom:2px}
+.log-msg{color:var(--text2)}
+.log-entry.info .log-msg{color:var(--teal)}
+.log-entry.warn .log-msg{color:var(--amber)}
+.log-entry.error .log-msg{color:var(--rose)}
+.log-entry.success .log-msg{color:var(--green)}
+
+/* Modal for adding source */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;
+  display:none;align-items:center;justify-content:center
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;padding:24px;width:420px;
+  box-shadow:0 24px 64px rgba(0,0,0,.5)
+}
+.modal h2{font-size:15px;font-weight:700;color:var(--teal2);margin-bottom:16px;font-family:var(--mono)}
+.field{margin-bottom:12px}
+.field label{display:block;font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:.08em;margin-bottom:5px;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:7px;padding:8px 11px;color:var(--text);
+  font-family:var(--mono);font-size:12px;outline:none;transition:.15s
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal)}
+.field select option{background:var(--bg3)}
+.modal-btns{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.mbtn{
+  padding:7px 16px;border-radius:7px;font-family:var(--mono);
+  font-size:11px;cursor:pointer;transition:.15s;border:1px solid
+}
+.mbtn.cancel{background:transparent;border-color:var(--border);color:var(--text2)}
+.mbtn.cancel:hover{background:var(--bg3)}
+.mbtn.save{background:var(--teal);border-color:var(--teal);color:#060910;font-weight:600}
+.mbtn.save:hover{background:var(--teal2)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hlogo">
+    <div class="hlogo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4b8" stroke-width="1.8">
+        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1"/>
+      </svg>
+    </div>
+    <div>
+      <div class="hlogo-name">ASCOR LABS</div>
+      <div class="hlogo-sub">Bio Intelligence Platform v2.0</div>
+    </div>
+  </div>
+  <div class="hstatus">
+    <div class="hstat"><div class="dot dot-live"></div><span id="activeCount">6</span> sources active</div>
+    <div class="hstat"><div class="dot dot-warn"></div>Filter layer: ON</div>
+    <div class="hstat" style="color:var(--blue)">Claude Sonnet 4</div>
+  </div>
+</header>
+
+<div class="shell">
+
+<!-- LEFT: SOURCE REGISTRY -->
+<aside class="panel-left">
+  <div class="panel-title">
+    Source Registry
+    <button class="add-btn" onclick="openModal()">+ Add Source</button>
+  </div>
+
+  <div class="sources-list" id="sourcesList"></div>
+
+  <div class="filter-box">
+    <div class="filter-title">⚡ Filter / Router Layer</div>
+    <div class="filter-desc">Each prompt is first classified by Claude. Only relevant sources are queried. Unrelated prompts go directly to Claude — no wasted API calls.</div>
+  </div>
+</aside>
+
+<!-- MAIN CHAT -->
+<main class="chat-main">
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="w-orb">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00d4b8" stroke-width="1.3">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+          <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4z"/>
+          <path d="M12 6v1M12 17v1M6 12h1M17 12h1"/>
+        </svg>
+      </div>
+      <div class="w-title">Bio Intelligence Platform</div>
+      <div class="w-desc">Your prompt is routed through a filter layer → matched to relevant biological databases, APIs & models → synthesized by Claude into a unified answer. Fully modular — add or remove sources anytime.</div>
+      <div class="arch-diagram">
+        <div class="arch-node" style="border-color:rgba(245,166,35,.4);color:var(--amber)">Your Prompt</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node" style="border-color:rgba(245,166,35,.4);color:var(--amber)">Filter Layer</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node" style="border-color:var(--border);color:var(--text2)">Bio Sources</div>
+        <div class="arch-arrow">+</div>
+        <div class="arch-node" style="border-color:rgba(79,195,247,.4);color:var(--blue)">Claude</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node" style="border-color:rgba(0,212,184,.4);color:var(--teal2)">Answer</div>
+      </div>
+      <div class="chips">
+        <span class="chip" onclick="chipSend(this)">What genes regulate oRG cell identity?</span>
+        <span class="chip" onclick="chipSend(this)">SOX2 protein structure and function</span>
+        <span class="chip" onclick="chipSend(this)">Drug targets for Alzheimer's disease</span>
+        <span class="chip" onclick="chipSend(this)">HOPX gene in brain organoids</span>
+        <span class="chip" onclick="chipSend(this)">iPSC reprogramming factors</span>
+        <span class="chip" onclick="chipSend(this)">What is ASCOR Labs working on?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Processing status bar -->
+  <div class="status-bar" id="statusBar">
+    <span class="status-step" id="step-filter">🔍 Classifying</span>
+    <span style="color:var(--text3);font-size:10px">→</span>
+    <span class="status-step" id="step-fetch">📡 Fetching sources</span>
+    <span style="color:var(--text3);font-size:10px">→</span>
+    <span class="status-step" id="step-synth">🧠 Synthesizing</span>
+  </div>
+
+  <div class="input-area">
+    <div class="input-wrap">
+      <textarea id="userInput" placeholder="Ask about genes, proteins, diseases, organoids, drug targets, cell types…" rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="send()" title="Send (Enter)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+    <div class="input-hint">
+      <span>Enter to send · Shift+Enter for newline</span>
+      <span id="routeHint" style="color:var(--teal)">Filter layer active</span>
+    </div>
+  </div>
+</main>
+
+<!-- RIGHT: ACTIVITY LOG -->
+<aside class="panel-right">
+  <div class="panel-title" style="justify-content:space-between">
+    Activity Log
+    <span style="cursor:pointer;color:var(--text3)" onclick="clearLog()" title="Clear">✕</span>
+  </div>
+  <div class="log-list" id="logList">
+    <div class="log-entry info">
+      <div class="log-time">System</div>
+      <div class="log-msg">Platform initialized. 6 sources loaded.</div>
+    </div>
+  </div>
+</aside>
+
+</div>
+
+<!-- ADD SOURCE MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>// ADD NEW SOURCE</h2>
+    <div class="field"><label>Source Name</label><input id="mName" placeholder="e.g. STRING DB"></div>
+    <div class="field"><label>Category</label>
+      <select id="mCategory">
+        <option value="gene">Gene / Genomics</option>
+        <option value="protein">Protein</option>
+        <option value="disease">Disease / Drug</option>
+        <option value="singlecell">Single-Cell</option>
+        <option value="pathway">Pathway / Metabolism</option>
+        <option value="literature">Literature</option>
+        <option value="model">AI Model</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="field"><label>API Endpoint URL</label><input id="mUrl" placeholder="https://api.example.com/search?q={query}"></div>
+    <div class="field"><label>Keywords (comma-separated — used by filter)</label><input id="mKeywords" placeholder="e.g. protein, structure, interaction"></div>
+    <div class="field"><label>Description</label><textarea id="mDesc" rows="2" placeholder="What data does this source provide?"></textarea></div>
+    <div class="modal-btns">
+      <button class="mbtn cancel" onclick="closeModal()">Cancel</button>
+      <button class="mbtn save" onclick="addSource()">Add Source</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// PLUGIN REGISTRY — Add/remove sources here freely
+// Each source is fully self-contained
+// ═══════════════════════════════════════════════════
+const SOURCE_REGISTRY = [
+  {
+    id: 'uniprot',
+    name: 'UniProt',
+    category: 'protein',
+    icon: '🧬',
+    color: '#69db7c',
+    colorA: 'rgba(105,219,124,0.1)',
+    description: 'Protein sequences, function, structure',
+    keywords: ['protein','gene','expression','sequence','amino acid','enzyme','receptor','marker','PAX6','SOX2','HOPX','TBR2','MAP2'],
+    tags: ['REST API','Proteins','Genes'],
+    enabled: true,
+    fetch: async (query) => {
+      const gene = extractGeneName(query) || query.split(' ').slice(0,2).join(' ');
+      const url = `https://rest.uniprot.org/uniprotkb/search?query=${encodeURIComponent(gene)}+AND+organism_id:9606&format=json&size=3`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('UniProt error');
+      const d = await r.json();
+      if (!d.results?.length) return null;
+      return d.results.slice(0,2).map(p => ({
+        id: p.primaryAccession,
+        name: p.uniProtkbId,
+        gene: p.genes?.[0]?.geneName?.value || '',
+        function: p.comments?.find(c=>c.commentType==='FUNCTION')?.texts?.[0]?.value?.slice(0,200) || '',
+        organism: p.organism?.scientificName || ''
+      }));
+    }
+  },
+  {
+    id: 'ncbi_gene',
+    name: 'NCBI Gene',
+    category: 'gene',
+    icon: '🔬',
+    color: '#4fc3f7',
+    colorA: 'rgba(79,195,247,0.1)',
+    description: 'Gene summaries, chromosomal locations',
+    keywords: ['gene','chromosome','locus','expression','mRNA','transcript','mutation','variant','SNP','OMIM','stem cell gene'],
+    tags: ['REST API','NCBI','Genomics'],
+    enabled: true,
+    fetch: async (query) => {
+      const gene = extractGeneName(query) || query.split(' ')[0];
+      const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${encodeURIComponent(gene)}[gene]+AND+Homo+sapiens[orgn]&retmax=3&retmode=json`;
+      const sr = await fetch(searchUrl);
+      const sd = await sr.json();
+      const ids = sd.esearchresult?.idlist?.slice(0,2);
+      if (!ids?.length) return null;
+      const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gene&id=${ids.join(',')}&retmode=json`;
+      const sumR = await fetch(sumUrl);
+      const sumD = await sumR.json();
+      return Object.values(sumD.result || {}).filter(g=>g.uid).slice(0,2).map(g=>({
+        id: g.uid, name: g.name, fullname: g.description,
+        summary: g.summary?.slice(0,250) || '',
+        chromosome: g.chromosome, location: g.maplocation
+      }));
+    }
+  },
+  {
+    id: 'open_targets',
+    name: 'Open Targets',
+    category: 'disease',
+    icon: '🎯',
+    color: '#f5a623',
+    colorA: 'rgba(245,166,35,0.1)',
+    description: 'Target–disease associations, drug targets',
+    keywords: ['disease','target','drug','therapy','alzheimer','parkinson','cancer','multiple sclerosis','neurodegeneration','therapeutic','clinical','trial'],
+    tags: ['GraphQL','Drug Targets','Disease'],
+    enabled: true,
+    fetch: async (query) => {
+      const gql = `{
+        search(queryString:"${query.replace(/"/g,'')}", entityNames:["target","disease"], page:{index:0,size:3}){
+          hits{
+            id name entity
+            highlights
+          }
+        }
+      }`;
+      const r = await fetch('https://api.platform.opentargets.org/api/v4/graphql', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({query: gql})
+      });
+      const d = await r.json();
+      return d.data?.search?.hits?.slice(0,3).map(h=>({
+        id:h.id, name:h.name, entity:h.entity, snippet: h.highlights?.[0] || ''
+      })) || null;
+    }
+  },
+  {
+    id: 'pubmed',
+    name: 'PubMed',
+    category: 'literature',
+    icon: '📄',
+    color: '#b39ddb',
+    colorA: 'rgba(179,157,219,0.1)',
+    description: 'Recent biomedical literature & abstracts',
+    keywords: ['paper','research','study','published','literature','journal','organoid','iPSC','stem cell','protocol','method','review'],
+    tags: ['REST API','Literature','NCBI'],
+    enabled: true,
+    fetch: async (query) => {
+      const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}[title/abstract]+AND+(organoid[title/abstract]+OR+iPSC[title/abstract]+OR+stem+cell[title/abstract])&retmax=3&sort=relevance&retmode=json`;
+      const sr = await fetch(searchUrl);
+      const sd = await sr.json();
+      const ids = sd.esearchresult?.idlist?.slice(0,3);
+      if (!ids?.length) return null;
+      const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(',')}&retmode=json`;
+      const sumR = await fetch(sumUrl);
+      const sumD = await sumR.json();
+      return Object.values(sumD.result||{}).filter(a=>a.uid).slice(0,3).map(a=>({
+        pmid:a.uid, title:a.title, authors: a.authors?.slice(0,2).map(x=>x.name).join(', '),
+        journal:a.fulljournalname, year:a.pubdate?.split(' ')[0],
+        doi: a.elocationid
+      }));
+    }
+  },
+  {
+    id: 'chembl',
+    name: 'ChEMBL',
+    category: 'disease',
+    icon: '💊',
+    color: '#ff5e7e',
+    colorA: 'rgba(255,94,126,0.1)',
+    description: 'Bioactive molecules, drug compounds',
+    keywords: ['drug','compound','molecule','inhibitor','treatment','pharmacology','bioactive','IC50','clinical','therapeutic','screening'],
+    tags: ['REST API','Drugs','ChEMBL'],
+    enabled: true,
+    fetch: async (query) => {
+      const term = query.split(' ').slice(0,3).join(' ');
+      const r = await fetch(`https://www.ebi.ac.uk/chembl/api/data/molecule/search?q=${encodeURIComponent(term)}&format=json&limit=3`);
+      const d = await r.json();
+      return d.molecules?.slice(0,3).map(m=>({
+        chembl_id: m.molecule_chembl_id,
+        name: m.pref_name || m.molecule_chembl_id,
+        type: m.molecule_type,
+        max_phase: m.max_phase,
+        formula: m.molecule_properties?.full_molformula
+      })).filter(m=>m.name) || null;
+    }
+  },
+  {
+    id: 'ensembl',
+    name: 'Ensembl',
+    category: 'gene',
+    icon: '🧪',
+    color: '#00d4b8',
+    colorA: 'rgba(0,212,184,0.1)',
+    description: 'Genome annotations, gene IDs, variants',
+    keywords: ['ensembl','ENSG','genome','annotation','variant','splice','exon','intron','GRCh38','chromosome','locus','transcription factor'],
+    tags: ['REST API','Genome','EBI'],
+    enabled: true,
+    fetch: async (query) => {
+      const gene = extractGeneName(query) || query.split(' ')[0];
+      const r = await fetch(`https://rest.ensembl.org/lookup/symbol/homo_sapiens/${gene}?content-type=application/json&expand=1`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      return d.id ? [{
+        id: d.id, name: d.display_name, description: d.description,
+        chromosome: d.seq_region_name, start: d.start, end: d.end,
+        strand: d.strand === 1 ? '+' : '-',
+        biotype: d.biotype, assembly: d.assembly_name
+      }] : null;
+    }
+  }
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let sources = SOURCE_REGISTRY.map(s => ({...s}));
+let history = [];
+let busy = false;
+
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+function extractGeneName(q) {
+  const m = q.match(/\b([A-Z][A-Z0-9]{1,7})\b/);
+  return m ? m[1] : null;
+}
+
+function now() {
+  return new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function log(msg, type='info') {
+  const list = document.getElementById('logList');
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  entry.innerHTML = `<div class="log-time">${now()}</div><div class="log-msg">${msg}</div>`;
+  list.insertBefore(entry, list.firstChild);
+  if (list.children.length > 60) list.lastChild.remove();
+}
+
+function autoResize(el) {
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+function handleKey(e) {
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}
+}
+
+function chipSend(el) {
+  document.getElementById('userInput').value=el.textContent;
+  send();
+}
+
+function clearLog() {
+  document.getElementById('logList').innerHTML='';
+}
+
+// ═══════════════════════════════════════════════
+// SOURCE REGISTRY RENDER
+// ═══════════════════════════════════════════════
+function renderSources() {
+  const list = document.getElementById('sourcesList');
+  list.innerHTML = '';
+  sources.forEach(s => {
+    const card = document.createElement('div');
+    card.className = `source-card ${s.enabled?'':'disabled'}`;
+    card.id = `src-${s.id}`;
+    card.innerHTML = `
+      <div class="source-head">
+        <div class="source-icon" style="background:${s.colorA}">${s.icon}</div>
+        <div class="source-info">
+          <div class="source-name">${s.name}</div>
+          <div class="source-type">${s.category.toUpperCase()}</div>
+        </div>
+        <label class="toggle-wrap">
+          <input type="checkbox" ${s.enabled?'checked':''} onchange="toggleSource('${s.id}',this.checked)">
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+      <div class="source-tags">
+        ${s.tags.map(t=>`<span class="stag" style="background:${s.colorA};color:${s.color};border:1px solid ${s.color}33">${t}</span>`).join('')}
+        <span class="stag" style="background:rgba(255,255,255,0.03);color:var(--text3);border:1px solid rgba(255,255,255,0.06);cursor:pointer" onclick="removeSource('${s.id}')" title="Remove">✕</span>
+      </div>`;
+    list.appendChild(card);
+  });
+  updateActiveCount();
+}
+
+function toggleSource(id, val) {
+  const s = sources.find(x=>x.id===id);
+  if(s){ s.enabled=val; updateActiveCount(); log(`${val?'Enabled':'Disabled'}: ${s.name}`, val?'info':'warn'); }
+  document.getElementById(`src-${id}`)?.classList.toggle('disabled',!val);
+}
+
+function removeSource(id) {
+  const s = sources.find(x=>x.id===id);
+  if(!s) return;
+  if(!confirm(`Remove "${s.name}" from registry?`)) return;
+  sources = sources.filter(x=>x.id!==id);
+  renderSources();
+  log(`Removed source: ${s.name}`, 'warn');
+}
+
+function updateActiveCount() {
+  document.getElementById('activeCount').textContent = sources.filter(s=>s.enabled).length;
+}
+
+// ═══════════════════════════════════════════════
+// ADD SOURCE MODAL
+// ═══════════════════════════════════════════════
+function openModal(){ document.getElementById('modal').classList.add('open') }
+function closeModal(){ document.getElementById('modal').classList.remove('open') }
+
+function addSource() {
+  const name = document.getElementById('mName').value.trim();
+  const url = document.getElementById('mUrl').value.trim();
+  const keywords = document.getElementById('mKeywords').value.split(',').map(k=>k.trim()).filter(Boolean);
+  const desc = document.getElementById('mDesc').value.trim();
+  const category = document.getElementById('mCategory').value;
+  if(!name){ alert('Name is required'); return; }
+  const colors = ['#69db7c','#4fc3f7','#f5a623','#b39ddb','#ff5e7e','#00d4b8'];
+  const col = colors[sources.length % colors.length];
+  const newSrc = {
+    id: 'custom_'+Date.now(), name, category, icon:'🔌',
+    color: col, colorA: col.replace('#','rgba(').replace(/([0-9a-f]{2})/gi,x=>parseInt(x,16)+',').slice(0,-1)+',0.1)',
+    description: desc, keywords, tags:[category,'Custom API'],
+    enabled: true,
+    fetch: async (query) => {
+      if(!url) return null;
+      const endpoint = url.replace('{query}', encodeURIComponent(query));
+      const r = await fetch(endpoint);
+      const d = await r.json();
+      return [{raw: JSON.stringify(d).slice(0,500)}];
+    }
+  };
+  sources.push(newSrc);
+  renderSources();
+  log(`Added new source: ${name}`, 'success');
+  closeModal();
+  ['mName','mUrl','mKeywords','mDesc'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ═══════════════════════════════════════════════
+// FILTER / ROUTER LAYER
+// ═══════════════════════════════════════════════
+async function classifyPrompt(prompt) {
+  const enabledSources = sources.filter(s=>s.enabled);
+  const sourceList = enabledSources.map(s=>`- ${s.id}: ${s.description} | keywords: ${s.keywords.slice(0,6).join(', ')}`).join('\n');
+
+  const classifyResponse = await fetch('/api/claude-proxy', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514', max_tokens:300,
+      messages:[{role:'user', content:`You are a routing filter for a biological research assistant.
+
+Available data sources:
+${sourceList}
+
+User prompt: "${prompt}"
+
+Respond ONLY with valid JSON (no explanation, no markdown). Format:
+{"sources": ["source_id1", "source_id2"], "reasoning": "one sentence why", "needs_bio_data": true/false}
+
+Rules:
+- Only include source IDs from the list above that are genuinely relevant
+- If the prompt is purely conversational or about ASCOR Labs company info → sources: [], needs_bio_data: false
+- If multiple sources match, include all relevant ones
+- If no sources match but it's a bio topic, include closest match`}]
+    })
+  });
+  const d = await classifyResponse.json();
+  const text = d.content?.[0]?.text || '{}';
+  try {
+    const clean = text.replace(/```json|```/g,'').trim();
+    return JSON.parse(clean);
+  } catch(e) { return {sources:[], needs_bio_data:false, reasoning:'Parse error'} }
+}
+
+// ═══════════════════════════════════════════════
+// FETCH FROM SOURCES
+// ═══════════════════════════════════════════════
+async function fetchSources(sourceIds, prompt) {
+  const results = {};
+  await Promise.allSettled(sourceIds.map(async id => {
+    const src = sources.find(s=>s.id===id);
+    if(!src?.enabled || !src?.fetch) return;
+    try {
+      log(`Querying ${src.name}…`);
+      const data = await src.fetch(prompt);
+      results[id] = {status:'ok', data, name:src.name, icon:src.icon};
+      log(`✓ ${src.name}: ${data?.length||0} results`, 'success');
+    } catch(e) {
+      results[id] = {status:'error', error:e.message, name:src.name, icon:src.icon};
+      log(`✗ ${src.name}: ${e.message}`, 'error');
+    }
+  }));
+  return results;
+}
+
+// ═══════════════════════════════════════════════
+// SYNTHESIS
+// ═══════════════════════════════════════════════
+async function synthesize(prompt, sourceResults) {
+  const context = Object.values(sourceResults)
+    .filter(r=>r.status==='ok'&&r.data)
+    .map(r=>`[${r.icon} ${r.name}]\n${JSON.stringify(r.data,null,2).slice(0,1200)}`)
+    .join('\n\n---\n\n');
+
+  const systemPrompt = `You are the ASCOR Labs Bio Intelligence Assistant. ASCOR Labs is a Hyderabad-based biotech startup building brain organoids (iPSC-derived) for drug screening.
+
+Scientific context: Expert in brain organoids, iPSC biology, cortical neurogenesis, scRNA-seq, MEA recordings, oRG cells, Triple-i protocol (Nature Cell Biology 2022), patents WO2023166111A1, WO2024100666A1.
+
+RESPONSE FORMAT:
+- Be precise and scientific
+- Use **bold** for gene names, key terms
+- Use ### for section headers
+- Reference the live data provided when relevant
+- Keep responses focused (4-8 sentences for simple questions, structured for complex ones)
+- If live data was fetched, acknowledge and use it`;
+
+  const userMsg = context
+    ? `Live data fetched from biological databases:\n\n${context}\n\n---\nUser question: ${prompt}\n\nSynthesize the live data with your expertise to answer comprehensively.`
+    : prompt;
+
+  const r = await fetch('/api/claude-proxy', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514', max_tokens:1000,
+      system: systemPrompt,
+      messages: [...history, {role:'user', content:userMsg}]
+    })
+  });
+  const d = await r.json();
+  return d.content?.[0]?.text || 'No response received.';
+}
+
+// ═══════════════════════════════════════════════
+// MAIN SEND PIPELINE
+// ═══════════════════════════════════════════════
+async function send() {
+  const input = document.getElementById('userInput');
+  const btn = document.getElementById('sendBtn');
+  const prompt = input.value.trim();
+  if(!prompt||busy) return;
+
+  busy=true; btn.disabled=true;
+  input.value=''; input.style.height='auto';
+
+  // Remove welcome
+  document.getElementById('welcome')?.remove();
+
+  // Add user message
+  addMsg('user', prompt);
+  history.push({role:'user', content:prompt});
+  log(`User: ${prompt.slice(0,50)}…`);
+
+  // Show status bar
+  const bar = document.getElementById('statusBar');
+  bar.classList.add('active');
+  setStep('filter','active'); setStep('fetch','pending'); setStep('synth','pending');
+
+  // Add typing indicator
+  const typingEl = addTyping();
+
+  let routedSources = [];
+  let sourceResults = {};
+
+  try {
+    // STEP 1: Filter/Classify
+    log('Running filter layer…');
+    const classification = await classifyPrompt(prompt);
+    setStep('filter','done');
+    log(`Router: [${classification.sources.join(', ')||'none'}] — ${classification.reasoning}`, 'info');
+
+    routedSources = classification.sources.filter(id => sources.find(s=>s.id===id&&s.enabled));
+
+    // STEP 2: Fetch sources
+    if(routedSources.length > 0) {
+      setStep('fetch','active');
+      sourceResults = await fetchSources(routedSources, prompt);
+      setStep('fetch','done');
+    } else {
+      setStep('fetch','skip');
+      log('No sources matched — direct to Claude', 'warn');
+    }
+
+    // STEP 3: Synthesize
+    setStep('synth','active');
+    const answer = await synthesize(prompt, sourceResults);
+    setStep('synth','done');
+
+    // Remove typing, add answer
+    typingEl.remove();
+    history.push({role:'assistant', content:answer});
+    addAssistantMsg(answer, routedSources, sourceResults);
+
+  } catch(e) {
+    typingEl.remove();
+    log(`Error: ${e.message}`, 'error');
+    addErrorMsg(`Error: ${e.message}`);
+  }
+
+  bar.classList.remove('active');
+  busy=false; btn.disabled=false;
+  document.getElementById('userInput').focus();
+}
+
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function setStep(id, state) {
+  const el = document.getElementById(`step-${id}`);
+  if(!el) return;
+  el.className = `status-step ${state}`;
+  const labels = {filter:'🔍 Classifying', fetch:'📡 Fetching sources', synth:'🧠 Synthesizing'};
+  const doneLabels = {filter:'✓ Classified', fetch:'✓ Sources fetched', synth:'✓ Synthesized'};
+  el.textContent = state==='done' ? doneLabels[id] : state==='skip' ? '⊘ No sources' : labels[id];
+}
+
+function addMsg(role, text) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const av = document.createElement('div');
+  av.className='avatar';
+  av.textContent = role==='user'?'YOU':'AI';
+  const bub = document.createElement('div');
+  bub.className='bubble';
+  bub.textContent=text;
+  div.appendChild(av); div.appendChild(bub);
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className='msg assistant';
+  const av = document.createElement('div'); av.className='avatar'; av.textContent='AI';
+  const bub = document.createElement('div'); bub.className='bubble';
+  bub.innerHTML='<div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  div.appendChild(av); div.appendChild(bub);
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+function addAssistantMsg(text, routedIds, sourceResults) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className='msg assistant';
+  const av = document.createElement('div'); av.className='avatar'; av.textContent='AI';
+  const bub = document.createElement('div'); bub.className='bubble';
+  bub.innerHTML = formatMd(text);
+
+  // Pipeline trace
+  const trace = document.createElement('div');
+  trace.className='pipeline-trace';
+  trace.innerHTML=`<div class="trace-label">PIPELINE TRACE</div><div class="trace-sources" id="traceRow"></div>`;
+  bub.appendChild(trace);
+  setTimeout(()=>{
+    const row = bub.querySelector('#traceRow');
+    // All enabled sources
+    sources.filter(s=>s.enabled).forEach(s=>{
+      const hit = routedIds.includes(s.id);
+      const res = sourceResults[s.id];
+      const state = !hit ? 'miss' : res?.status==='ok' ? 'hit' : 'error';
+      const label = !hit ? s.name : res?.status==='ok' ? `${s.icon} ${s.name} (${res.data?.length||0})` : `${s.name} ✗`;
+      const span = document.createElement('span');
+      span.className=`trace-src ${state}`; span.textContent=label;
+      row.appendChild(span);
+    });
+    const claudeSpan = document.createElement('span');
+    claudeSpan.className='trace-src claude'; claudeSpan.textContent='🤖 Claude Sonnet 4';
+    row.appendChild(claudeSpan);
+  },0);
+
+  div.appendChild(av); div.appendChild(bub);
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+
+function addErrorMsg(msg) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className='msg assistant';
+  const av=document.createElement('div'); av.className='avatar'; av.textContent='AI';
+  const bub=document.createElement('div'); bub.className='bubble';
+  bub.innerHTML=`<span style="color:var(--rose)">${msg}</span>`;
+  div.appendChild(av); div.appendChild(bub);
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+
+function formatMd(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`(.*?)`/g,'<code>$1</code>')
+    .replace(/^### (.*$)/gm,'<h3>$1</h3>')
+    .replace(/^## (.*$)/gm,'<h3>$1</h3>')
+    .replace(/^[-•] (.*$)/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>')
+    .replace(/\n\n+/g,'</p><p>')
+    .replace(/\n/g,'<br>')
+    .replace(/^(?!<[hul])/,'<p>')
+    .replace(/([^>])$/,'$1</p>');
+}
+
+// ═══════════════════════
+// INIT
+// ═══════════════════════
+renderSources();
+</script>
+</body>
+</html>
