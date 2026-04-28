@@ -7,6 +7,12 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+[[redirects]]
+  from = "/api/bio-proxy"
+  to = "/.netlify/functions/bio-proxy"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
