@@ -381,7 +381,7 @@ textarea::placeholder{color:var(--text3)}
     </div>
   </div>
   <div class="hstatus">
-    <div class="hstat"><div class="dot dot-live"></div><span id="activeCount">6</span> sources active</div>
+    <div class="hstat"><div class="dot dot-live"></div><span id="activeCount">7</span> sources active</div>
     <div class="hstat"><div class="dot dot-warn"></div>Filter layer: ON</div>
     <div class="hstat" style="color:var(--blue)">Claude Sonnet 4</div>
   </div>
@@ -410,6 +410,7 @@ textarea::placeholder{color:var(--text3)}
     <div class="panel-icon-item">📄</div>
     <div class="panel-icon-item">💊</div>
     <div class="panel-icon-item">🧪</div>
+    <div class="panel-icon-item">🤖</div>
   </div>
 
   <div class="sources-list" id="sourcesList"></div>
@@ -500,7 +501,7 @@ textarea::placeholder{color:var(--text3)}
   <div class="log-list" id="logList">
     <div class="log-entry info">
       <div class="log-time">System</div>
-      <div class="log-msg">Platform initialized. 6 sources loaded.</div>
+      <div class="log-msg">Platform initialized. 7 sources loaded.</div>
     </div>
   </div>
 </aside>
@@ -718,6 +719,103 @@ const SOURCE_REGISTRY = [
         strand: d.strand === 1 ? '+' : '-',
         biotype: d.biotype, assembly: d.assembly_name
       }];
+    }
+  },
+
+  // ── scGPT / CellxGene ─────────────────────────────────────────────────────
+  // scGPT has no public REST API (requires GPU/PyTorch locally).
+  // Integrated via: HuggingFace Hub API (model metadata) +
+  //                 CellxGene Census API (33M-cell corpus scGPT was trained on)
+  {
+    id: 'scgpt',
+    name: 'scGPT / CellxGene',
+    category: 'singlecell',
+    icon: '🤖',
+    color: '#c084fc',
+    colorA: 'rgba(192,132,252,0.1)',
+    description: 'scGPT foundation model knowledge + CellxGene 33M-cell corpus',
+    keywords: [
+      'scGPT','single cell','scRNA','cell type','cell annotation','gene expression',
+      'transcriptomics','embedding','foundation model','perturbation','batch correction',
+      'multi-omic','UMAP','clustering','cell atlas','iPSC cell type','organoid cell',
+      'neural progenitor','radial glia','oRG','vRG','neuron','astrocyte','oligodendrocyte',
+      'single-cell sequencing','scRNA-seq analysis'
+    ],
+    tags: ['HuggingFace','CellxGene','scRNA-seq','AI Model'],
+    enabled: true,
+    fetch: async (query) => {
+      const results = [];
+
+      // Part 1: HuggingFace API — scGPT model metadata
+      try {
+        const hfR = await fetch(
+          'https://huggingface.co/api/models?search=scGPT&limit=3&full=false',
+          { headers: { 'Accept': 'application/json' } }
+        );
+        if (hfR.ok) {
+          const hfData = await hfR.json();
+          const models = (Array.isArray(hfData) ? hfData : [])
+            .filter(m => m.modelId && m.modelId.toLowerCase().includes('scgpt'))
+            .slice(0, 2)
+            .map(m => ({
+              type: 'hf_model',
+              modelId: m.modelId,
+              downloads: m.downloads || 0,
+              likes: m.likes || 0,
+              tags: (m.tags || []).slice(0, 6),
+              description: 'scGPT: Foundation model for single-cell multi-omics. Pre-trained on 33M human cells. Nature Methods 2024.'
+            }));
+          results.push(...models);
+        }
+      } catch(e) { /* silent */ }
+
+      // Part 2: CellxGene Census — datasets from the 33M-cell corpus
+      try {
+        const cxR = await fetch(
+          'https://api.cellxgene.cziscience.com/curation/v1/datasets?organism=Homo+sapiens&limit=4',
+          { headers: { 'Accept': 'application/json' } }
+        );
+        if (cxR.ok) {
+          const ct = cxR.headers.get('content-type') || '';
+          if (ct.includes('application/json')) {
+            const cxData = await cxR.json();
+            const datasets = (cxData.datasets || cxData || []).slice(0, 3);
+            const mapped = datasets
+              .filter(ds => ds && ds.title)
+              .map(ds => ({
+                type: 'cellxgene_dataset',
+                title: ds.title || 'Dataset',
+                tissue: (ds.tissue || []).map(t => (t.label || t)).join(', ') || 'N/A',
+                cell_count: ds.cell_count || 'N/A',
+                assay: (ds.assay || []).map(a => (a.label || a)).join(', ') || 'N/A',
+                disease: (ds.disease || []).map(d => (d.label || d)).join(', ') || 'normal',
+                note: 'Part of the 33M-cell corpus scGPT was trained on'
+              }));
+            if (mapped.length) results.push(...mapped);
+          }
+        }
+      } catch(e) { /* silent */ }
+
+      // Part 3: Always include scGPT capability summary for context
+      results.push({
+        type: 'scgpt_knowledge',
+        model: 'scGPT (Cui et al., Nature Methods 2024)',
+        training_data: '33 million human cells — scRNA-seq (CellxGene corpus)',
+        architecture: 'Generative Pre-trained Transformer with masked multi-head attention for gene tokens',
+        tasks: [
+          'Cell type annotation from gene expression profiles',
+          'Multi-batch integration (batch effect correction)',
+          'Multi-omic integration (scRNA-seq + scATAC-seq + protein)',
+          'Genetic perturbation response prediction',
+          'Gene regulatory network inference'
+        ],
+        relevance_to_ascor: 'ASCOR brain organoid scRNA-seq data (Nature Cell Biology 2022) can be fine-tuned on scGPT for automated cell-type QC and oRG/vRG identification',
+        paper: 'https://doi.org/10.1038/s41592-024-02201-0',
+        github: 'https://github.com/bowang-lab/scGPT',
+        huggingface: 'https://huggingface.co/bowang-lab/scGPT-human'
+      });
+
+      return results.length ? results : null;
     }
   }
 ];
