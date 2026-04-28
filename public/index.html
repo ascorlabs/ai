@@ -383,7 +383,7 @@ textarea::placeholder{color:var(--text3)}
   <div class="hstatus">
     <div class="hstat"><div class="dot dot-live"></div><span id="activeCount">7</span> sources active</div>
     <div class="hstat"><div class="dot dot-warn"></div>Filter layer: ON</div>
-    <div class="hstat" style="color:var(--blue)">Claude Sonnet 4</div>
+    <div class="hstat" style="color:var(--blue)">Claude Sonnet 4.5</div>
   </div>
 </header>
 
@@ -589,7 +589,9 @@ const SOURCE_REGISTRY = [
       const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gene&id=${ids.join(',')}&retmode=json`;
       const sumR = await fetch(sumUrl);
       const sumD = await sumR.json();
-      return Object.values(sumD.result || {}).filter(g=>g.uid).slice(0,2).map(g=>({
+      const geneIds = sumD.result?.uids || [];
+      return geneIds.slice(0,2).map(id => sumD.result[id]).filter(g=>g&&g.uid).map(g=>({
+
         id: g.uid, name: g.name, fullname: g.description,
         summary: g.summary?.slice(0,250) || '',
         chromosome: g.chromosome, location: g.maplocation
@@ -651,7 +653,9 @@ const SOURCE_REGISTRY = [
       const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(',')}&retmode=json`;
       const sumR = await fetch(sumUrl);
       const sumD = await sumR.json();
-      return Object.values(sumD.result||{}).filter(a=>a.uid).slice(0,3).map(a=>({
+      const pubIds = sumD.result?.uids || [];
+      return pubIds.slice(0,3).map(id => sumD.result[id]).filter(a=>a&&a.uid).map(a=>({
+
         pmid:a.uid, title:a.title, authors: (a.authors||[]).slice(0,2).map(x=>x?.name||'').filter(Boolean).join(', '),
         journal:a.fulljournalname, year:a.pubdate?.split(' ')[0],
         doi: a.elocationid
@@ -931,17 +935,28 @@ function addSource() {
   if(!name){ alert('Name is required'); return; }
   const colors = ['#69db7c','#4fc3f7','#f5a623','#b39ddb','#ff5e7e','#00d4b8'];
   const col = colors[sources.length % colors.length];
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
   const newSrc = {
     id: 'custom_'+Date.now(), name, category, icon:'🔌',
-    color: col, colorA: col.replace('#','rgba(').replace(/([0-9a-f]{2})/gi,x=>parseInt(x,16)+',').slice(0,-1)+',0.1)',
+    color: col, colorA: hexToRgba(col, 0.1),
     description: desc, keywords, tags:[category,'Custom API'],
     enabled: true,
     fetch: async (query) => {
       if(!url) return null;
-      const endpoint = url.replace('{query}', encodeURIComponent(query));
-      const r = await fetch(endpoint);
-      const d = await r.json();
-      return [{raw: JSON.stringify(d).slice(0,500)}];
+      try {
+        const endpoint = url.replace('{query}', encodeURIComponent(query));
+        const r = await fetch(endpoint);
+        if (!r.ok) return null;
+        const ct = r.headers.get('content-type') || '';
+        if (!ct.includes('json')) return null;
+        const d = await r.json();
+        return [{raw: JSON.stringify(d).slice(0,500)}];
+      } catch(e) { return null; }
     }
   };
   sources.push(newSrc);
@@ -1046,14 +1061,15 @@ async function classifyPrompt(prompt) {
   const enabledSources = sources.filter(s=>s.enabled);
   const sourceList = enabledSources.map(s=>`- ${s.id}: ${s.description} | keywords: ${(s.keywords||[]).slice(0,6).join(', ')}`).join('\n');
 
+  const safePrompt = prompt.replace(/[`"\\]/g, ' ').replace(/\n/g, ' ').slice(0, 500);
   const d = await callClaude({
-    model:'claude-sonnet-4-20250514', max_tokens:300,
+    model:'claude-sonnet-4-5', max_tokens:300,
     messages:[{role:'user', content:`You are a routing filter for a biological research assistant.
 
 Available data sources:
 ${sourceList}
 
-User prompt: "${prompt}"
+User prompt: "${safePrompt}"
 
 Respond ONLY with valid JSON (no explanation, no markdown). Format:
 {"sources": ["source_id1", "source_id2"], "reasoning": "one sentence why", "needs_bio_data": true/false}
@@ -1123,9 +1139,9 @@ RESPONSE FORMAT:
     : prompt;
 
   const d = await callClaude({
-    model:'claude-sonnet-4-20250514', max_tokens:1000,
+    model:'claude-sonnet-4-5', max_tokens:1000,
     system: systemPrompt,
-    messages: [...history, {role:'user', content:userMsg}]
+    messages: [...history.slice(-20), {role:'user', content:userMsg}]
   });
   if (!d || !d.content || !d.content[0]) {
     log('Synthesis returned empty — check API key or quota', 'error');
@@ -1275,7 +1291,7 @@ function addAssistantMsg(text, routedIds, sourceResults) {
       row.appendChild(span);
     });
     const claudeSpan = document.createElement('span');
-    claudeSpan.className='trace-src claude'; claudeSpan.textContent='🤖 Claude Sonnet 4';
+    claudeSpan.className='trace-src claude'; claudeSpan.textContent='🤖 Claude Sonnet 4.5';
     row.appendChild(claudeSpan);
   },0);
 
@@ -1303,7 +1319,7 @@ function formatMd(t) {
     .replace(/^### (.*$)/gm,'<h3>$1</h3>')
     .replace(/^## (.*$)/gm,'<h3>$1</h3>')
     .replace(/^[-•] (.*$)/gm,'<li>$1</li>')
-    .replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>')
+    .replace(/((?:<li>.*?<\/li>\n?)+)/gs, '<ul>$1</ul>')
     .replace(/\n\n+/g,'</p><p>')
     .replace(/\n/g,'<br>')
     .replace(/^(?!<[hul])/,'<p>')
