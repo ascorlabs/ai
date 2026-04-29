@@ -1217,10 +1217,10 @@ const MODEL_CONFIG = {
     model: 'claude-sonnet-4-5'
   },
   gemini: {
-    name: 'Gemini 2.5 Flash',
+    name: 'Gemini 2.5 Flash (Free)',
     label: '◈ Gemini',
     color: '#1a73e8',
-    model: 'gemini-2.5-flash-preview-05-20'
+    model: 'gemini-2.5-flash'
   }
 };
 
@@ -1416,7 +1416,7 @@ async function callClaude(payload) {
           throw new Error('Gemini API key required');
         }
         const geminiPayload = toGeminiPayload(payload);
-        const model_id = MODEL_CONFIG.gemini.model;
+        const model_id = MODEL_CONFIG.gemini.model; // gemini-2.5-flash (stable)
         let r;
         if (isNetlify) {
           r = await fetch('/api/claude-proxy', {

@@ -21,7 +21,7 @@ exports.handler = async (event) => {
       const geminiKey = process.env.GEMINI_API_KEY;
       if (!geminiKey) return { statusCode: 500, headers,
         body: JSON.stringify({ error: { message: 'GEMINI_API_KEY not set in Netlify env vars' } }) };
-      const modelId = body._model || 'gemini-2.5-flash-preview-05-20';
+      const modelId = body._model || 'gemini-2.5-flash';
       const { _provider, _model, ...geminiBody } = body;
       const r = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${geminiKey}`,
