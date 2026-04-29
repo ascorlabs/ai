@@ -1,50 +1,45 @@
 // netlify/functions/claude-proxy.js
-// Secure backend proxy — API key never exposed to browser
+// Handles both Claude (Anthropic) and Gemini (Google) — keys stored securely server-side
 
 exports.handler = async (event) => {
-  // Only allow POST
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
-
-  // CORS headers — allow requests from your own domain only
-  const headers = {
-    'Access-Control-Allow-Origin': '*', // Change to 'https://yourdomain.netlify.app' after testing
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
-
-  // Handle preflight
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+    return { statusCode: 200, headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    }, body: '' };
   }
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+
+  const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
 
   try {
     const body = JSON.parse(event.body);
+    const isGemini = body.contents !== undefined || body._provider === 'gemini';
 
-    // Forward to Anthropic API using the secret key stored in Netlify env vars
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY, // Secret — never sent to browser
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-
-    return {
-      statusCode: response.status,
-      headers,
-      body: JSON.stringify(data),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message }),
-    };
+    if (isGemini) {
+      const geminiKey = process.env.GEMINI_API_KEY;
+      if (!geminiKey) return { statusCode: 500, headers,
+        body: JSON.stringify({ error: { message: 'GEMINI_API_KEY not set in Netlify env vars' } }) };
+      const modelId = body._model || 'gemini-2.5-flash-preview-05-20';
+      const { _provider, _model, ...geminiBody } = body;
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${geminiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody) }
+      );
+      return { statusCode: r.status, headers, body: JSON.stringify(await r.json()) };
+    } else {
+      const anthropicKey = process.env.ANTHROPIC_API_KEY;
+      if (!anthropicKey) return { statusCode: 500, headers,
+        body: JSON.stringify({ error: { message: 'ANTHROPIC_API_KEY not set in Netlify env vars' } }) };
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(body)
+      });
+      return { statusCode: r.status, headers, body: JSON.stringify(await r.json()) };
+    }
+  } catch (e) {
+    return { statusCode: 500, headers, body: JSON.stringify({ error: { message: e.message } }) };
   }
 };

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <title>ASCOR Labs — Bio Intelligence Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -21,7 +21,7 @@
   --r:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;height:100dvh;overflow:hidden}
 body{background:var(--bg0);color:var(--text);font-family:var(--display);display:flex;flex-direction:column}
 
 /* Scanlines texture */
@@ -363,6 +363,203 @@ textarea::placeholder{color:var(--text3)}
 .mbtn.cancel:hover{background:var(--bg3)}
 .mbtn.save{background:var(--teal);border-color:var(--teal);color:#060910;font-weight:600}
 .mbtn.save:hover{background:var(--teal2)}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — TABLET (≤1024px)
+   Both panels auto-collapse, more room for chat
+═══════════════════════════════════════════════════ */
+@media (max-width:1024px) {
+  .panel-left { width:240px }
+  .panel-right { width:200px }
+  .hstatus .hstat:last-child { display:none }
+  .bubble { max-width:85% }
+  .messages { padding:16px 18px; gap:14px }
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — SMALL TABLET / LARGE MOBILE (≤768px)
+   Side panels hidden off-screen, toggled as drawers
+═══════════════════════════════════════════════════ */
+@media (max-width:768px) {
+  /* Header compact */
+  header { padding:0 14px; height:50px }
+  .hlogo-sub { display:none }
+  .hstatus { gap:8px }
+  .hstat { font-size:10px; gap:4px }
+  .hstat:nth-child(2) { display:none }
+
+  /* Shell — panels become overlay drawers */
+  .shell { position:relative; overflow:hidden }
+
+  /* Left panel — slide-in drawer from left */
+  .panel-left {
+    position:absolute; top:0; left:0; bottom:0; z-index:200;
+    width:280px !important;
+    transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    box-shadow:4px 0 24px rgba(0,0,0,.5);
+  }
+  .panel-left.mobile-open {
+    transform:translateX(0);
+  }
+  .panel-left.collapsed { width:280px !important; transform:translateX(-100%) }
+
+  /* Right panel — slide-in drawer from right */
+  .panel-right {
+    position:absolute; top:0; right:0; bottom:0; z-index:200;
+    width:280px !important;
+    transform:translateX(100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    box-shadow:-4px 0 24px rgba(0,0,0,.5);
+  }
+  .panel-right.mobile-open {
+    transform:translateX(0);
+  }
+  .panel-right.collapsed { width:280px !important; transform:translateX(100%) }
+
+  /* Backdrop when drawer open */
+  .drawer-backdrop {
+    display:none; position:absolute; inset:0; z-index:190;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(2px);
+  }
+  .drawer-backdrop.active { display:block }
+
+  /* Hide desktop collapse buttons — show mobile FAB buttons instead */
+  .collapse-btn { display:none !important }
+  #btnLeft, #btnLeftC, #btnRight, #btnRightC { display:none !important }
+
+  /* Mobile FAB toolbar in header */
+  .mobile-fabs { display:flex; gap:6px; align-items:center }
+  .fab {
+    width:32px; height:32px; border-radius:8px;
+    background:var(--teal-a); border:1px solid var(--border);
+    color:var(--teal); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; transition:.15s; flex-shrink:0;
+  }
+  .fab:hover, .fab.active { background:rgba(0,212,184,.25); border-color:var(--teal) }
+
+  /* Chat area full width */
+  .chat-main { width:100% }
+
+  /* Messages */
+  .messages { padding:12px 12px; gap:12px }
+  .bubble { max-width:92%; font-size:13px; padding:11px 13px }
+
+  /* Input area */
+  .input-area { padding:10px 12px 14px }
+  .input-hint .right-hint { display:none }
+  textarea { font-size:16px } /* Prevent iOS zoom on focus */
+  .send-btn { width:40px; height:40px; border-radius:10px }
+
+  /* Status bar */
+  .status-bar { margin:0 12px; font-size:10px }
+
+  /* Welcome screen */
+  .w-title { font-size:18px }
+  .w-desc { font-size:12px }
+  .arch-diagram { display:none }
+  .chips { gap:5px }
+  .chip { font-size:10px; padding:4px 10px }
+  .w-orb { width:60px; height:60px }
+
+  /* Modal full screen on mobile */
+  .modal { width:calc(100vw - 32px); max-width:400px; padding:20px }
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤480px)
+   Further simplification
+═══════════════════════════════════════════════════ */
+@media (max-width:480px) {
+  header { height:48px; padding:0 10px }
+  .hlogo-name { font-size:11px }
+  .hstatus { gap:6px }
+  .hstat:nth-child(3) { display:none }
+
+  .messages { padding:10px 10px; gap:10px }
+  .bubble { max-width:95%; font-size:12.5px; padding:10px 12px; line-height:1.7 }
+  .avatar { width:26px; height:26px; font-size:8px; border-radius:6px }
+
+  .input-area { padding:8px 10px 12px }
+  textarea { font-size:16px; min-height:20px }
+  .send-btn { width:38px; height:38px }
+
+  .w-title { font-size:16px }
+  .chip { font-size:9px; padding:4px 8px }
+  .welcome { padding:24px 12px; gap:12px }
+
+  /* Pipeline trace compact */
+  .trace-src { font-size:9px; padding:2px 6px }
+  .trace-label { font-size:9px }
+  .pipeline-trace { gap:4px; margin-top:8px; padding-top:8px }
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE FABS — hidden on desktop
+═══════════════════════════════════════════════════ */
+.mobile-fabs { display:none }
+
+/* ═══════════════════════════════════════════════════
+   SAFE AREA — notch/home-bar support (iOS/Android)
+═══════════════════════════════════════════════════ */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .input-area {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── MODEL TOGGLE ── */
+.model-toggle {
+  display:flex;align-items:center;gap:0;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:20px;padding:2px;flex-shrink:0;
+}
+.mtog-btn {
+  padding:4px 11px;border-radius:16px;font-family:var(--mono);
+  font-size:10px;font-weight:600;letter-spacing:.04em;
+  border:none;cursor:pointer;transition:.2s;background:transparent;
+  color:var(--text3);white-space:nowrap;
+}
+.mtog-btn.active-claude {
+  background:linear-gradient(135deg,#5b5ef4,#8b5cf6);
+  color:#fff;box-shadow:0 2px 8px rgba(91,94,244,.4);
+}
+.mtog-btn.active-gemini {
+  background:linear-gradient(135deg,#1a73e8,#00b4a0);
+  color:#fff;box-shadow:0 2px 8px rgba(26,115,232,.4);
+}
+.mtog-btn:not(.active-claude):not(.active-gemini):hover {
+  color:var(--text2);background:var(--teal-a);
+}
+.model-indicator {
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:10px;
+}
+.model-indicator .dot { flex-shrink:0 }
+.failover-toast {
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--bg2);border:1px solid var(--amber);
+  border-radius:10px;padding:10px 18px;z-index:9998;
+  font-family:var(--mono);font-size:12px;color:var(--amber);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  animation:toastIn .3s ease;display:flex;align-items:center;gap:8px;
+}
+@keyframes toastIn {
+  from{opacity:0;transform:translateX(-50%) translateY(12px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+/* hide old static model label in hstatus */
+.hstat-model { display:none !important }
+@media(max-width:768px){
+  .model-toggle { display:none }
+  .mobile-model-toggle {
+    display:flex !important;gap:0;
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:20px;padding:2px;
+  }
+}
+.mobile-model-toggle { display:none }
 </style>
 </head>
 <body>
@@ -383,11 +580,31 @@ textarea::placeholder{color:var(--text3)}
   <div class="hstatus">
     <div class="hstat"><div class="dot dot-live"></div><span id="activeCount">7</span> sources active</div>
     <div class="hstat"><div class="dot dot-warn"></div>Filter layer: ON</div>
-    <div class="hstat" style="color:var(--blue)">Claude Sonnet 4.5</div>
+    <!-- Model toggle — desktop -->
+    <div class="model-toggle" id="modelToggle">
+      <button class="mtog-btn active-claude" id="btnClaude" onclick="setModel('claude')" title="Claude Sonnet 4.5 — Anthropic">
+        ✦ Claude
+      </button>
+      <button class="mtog-btn" id="btnGemini" onclick="setModel('gemini')" title="Gemini 2.5 Flash — Google (Free)">
+        ◈ Gemini
+      </button>
+    </div>
+  </div>
+  <!-- Mobile FABs — visible only on small screens -->
+  <div class="mobile-fabs" id="mobileFabs">
+    <button class="fab" id="fabLeft" onclick="toggleDrawer('left')" title="Sources">⚙</button>
+    <!-- Mobile model toggle -->
+    <div class="mobile-model-toggle" id="mobileModelToggle">
+      <button class="mtog-btn active-claude" id="mbtnClaude" onclick="setModel('claude')" style="font-size:9px;padding:3px 8px">✦ Claude</button>
+      <button class="mtog-btn" id="mbtnGemini" onclick="setModel('gemini')" style="font-size:9px;padding:3px 8px">◈ Gemini</button>
+    </div>
+    <button class="fab" id="fabRight" onclick="toggleDrawer('right')" title="Activity Log">📋</button>
   </div>
 </header>
 
 <div class="shell">
+<!-- Drawer backdrop — closes panels when tapped on mobile -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeAllDrawers()"></div>
 
 <!-- LEFT: SOURCE REGISTRY -->
 <aside class="panel-left" id="panelLeft">
@@ -475,7 +692,7 @@ textarea::placeholder{color:var(--text3)}
     </div>
     <div class="input-hint">
       <span>Enter to send · Shift+Enter for newline</span>
-      <span id="routeHint" style="color:var(--teal)">Filter layer active</span>
+      <span id="routeHint" class="right-hint" style="color:var(--teal)">Filter layer active</span>
     </div>
   </div>
 </main>
@@ -913,6 +1130,8 @@ function removeSource(id) {
   if(!confirm(`Remove "${s.name}" from registry?`)) return;
   sources = sources.filter(x=>x.id!==id);
   renderSources();
+// Apply saved model preference
+setModel(activeModel, true);
   log(`Removed source: ${s.name}`, 'warn');
 }
 
@@ -981,43 +1200,259 @@ function getApiKey() {
   return _apiKey;
 }
 
+// ═══════════════════════════════════════════════════════
+// DUAL-MODEL SYSTEM — Claude + Gemini 2.5 Flash (free)
+// Auto-failover: if Claude returns low-credit / quota error
+//                → automatically switches to Gemini
+// Manual toggle: header buttons let user switch anytime
+// ═══════════════════════════════════════════════════════
+let activeModel = localStorage.getItem('ascor_model') || 'claude'; // 'claude' | 'gemini'
+let _geminiKey  = localStorage.getItem('ascor_gemini_key') || '';
+
+const MODEL_CONFIG = {
+  claude: {
+    name: 'Claude Sonnet 4.5',
+    label: '✦ Claude',
+    color: '#8b5cf6',
+    model: 'claude-sonnet-4-5'
+  },
+  gemini: {
+    name: 'Gemini 2.5 Flash',
+    label: '◈ Gemini',
+    color: '#1a73e8',
+    model: 'gemini-2.5-flash-preview-05-20'
+  }
+};
+
+// Low-credit / quota error patterns — triggers auto-failover
+const CREDIT_ERRORS = [
+  'credit balance is too low',
+  'insufficient_quota',
+  'rate_limit_exceeded',
+  'overloaded',
+  'credit',
+  'quota',
+  'billing',
+  'payment'
+];
+
+function isLowCreditError(msg) {
+  const m = (msg || '').toLowerCase();
+  return CREDIT_ERRORS.some(e => m.includes(e));
+}
+
+function setModel(model, silent=false) {
+  activeModel = model;
+  localStorage.setItem('ascor_model', model);
+  // Update all toggle buttons
+  ['btnClaude','mbtnClaude'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.className = 'mtog-btn' + (model === 'claude' ? ' active-claude' : '');
+    }
+  });
+  ['btnGemini','mbtnGemini'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.className = 'mtog-btn' + (model === 'gemini' ? ' active-gemini' : '');
+    }
+  });
+  if (!silent) {
+    log(`Switched to: ${MODEL_CONFIG[model].name}`, 'info');
+    document.getElementById('routeHint').textContent =
+      model === 'claude' ? 'Claude · Filter layer active' : 'Gemini 2.5 Flash · Free tier';
+    document.getElementById('routeHint').style.color =
+      model === 'claude' ? 'var(--teal)' : '#1a73e8';
+  }
+  // If Gemini selected and no key stored, prompt for it
+  if (model === 'gemini' && !_geminiKey) showGeminiKeyModal();
+}
+
+function showFailoverToast(fromModel, toModel) {
+  const existing = document.getElementById('failover-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'failover-toast';
+  toast.className = 'failover-toast';
+  toast.innerHTML = `⚡ Auto-switched: ${MODEL_CONFIG[fromModel].name} → ${MODEL_CONFIG[toModel].name} (credit limit reached)`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+
+function showGeminiKeyModal() {
+  const existing = document.getElementById('gemini-modal');
+  if (existing) { existing.style.display='flex'; return; }
+  const overlay = document.createElement('div');
+  overlay.id = 'gemini-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:420px;font-family:var(--mono)">
+      <div style="font-size:14px;color:#1a73e8;font-weight:700;margin-bottom:6px">◈ Google Gemini API Key</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.8">
+        Gemini 2.5 Flash is <strong style="color:#1D9E75">completely free</strong> — no credit card needed.<br>
+        Get your free key in 30 seconds:<br>
+        1. Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#1a73e8">aistudio.google.com/apikey</a><br>
+        2. Click <strong>"Create API Key"</strong><br>
+        3. Copy and paste it below
+      </div>
+      <input id="gemini-key-input" type="password" placeholder="AIza..."
+        style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:12px;margin-bottom:12px;outline:none">
+      <div style="display:flex;gap:8px">
+        <button onclick="saveGeminiKey()" style="flex:1;padding:8px;background:#1a73e8;border:none;border-radius:7px;color:#fff;font-family:var(--mono);font-weight:700;cursor:pointer;font-size:12px">Save & Use Gemini</button>
+        <button onclick="document.getElementById('gemini-modal').style.display='none';setModel('claude',true);" style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text2);font-family:var(--mono);cursor:pointer;font-size:12px">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('gemini-key-input')?.focus(), 100);
+}
+
+function saveGeminiKey() {
+  const key = document.getElementById('gemini-key-input')?.value?.trim();
+  if (!key || !key.startsWith('AIza')) {
+    alert('Please enter a valid Google AI Studio API key starting with AIza');
+    return;
+  }
+  _geminiKey = key;
+  localStorage.setItem('ascor_gemini_key', key);
+  document.getElementById('gemini-modal').style.display = 'none';
+  log('Gemini API key saved. Ready!', 'success');
+}
+
+// ── Normalize response to Claude format ───────────────────────────────────
+// Both models return data — we normalize Gemini → Claude response shape
+function normalizeResponse(data, model) {
+  if (model === 'claude') return data; // already correct shape
+  // Gemini response shape → normalize to {content:[{text:...}]}
+  try {
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+               || data?.candidates?.[0]?.output
+               || '';
+    if (!text) throw new Error('Empty Gemini response');
+    return { content: [{ type: 'text', text }] };
+  } catch(e) {
+    throw new Error('Gemini response parse error: ' + e.message);
+  }
+}
+
+// ── Convert Claude payload → Gemini format ────────────────────────────────
+function toGeminiPayload(payload) {
+  const systemText = payload.system || '';
+  const messages = payload.messages || [];
+
+  // Build contents array for Gemini
+  const contents = messages.map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
+  }));
+
+  return {
+    systemInstruction: systemText ? { parts: [{ text: systemText }] } : undefined,
+    contents,
+    generationConfig: {
+      maxOutputTokens: payload.max_tokens || 1000,
+      temperature: 0.7
+    }
+  };
+}
+
 async function callClaude(payload) {
   const isNetlify = window.location.hostname.includes('netlify.app') ||
                     window.location.hostname.includes('ascorlabs.com') ||
                     window.location.pathname.startsWith('/api');
 
-  if (isNetlify) {
-    // On Netlify — use secure proxy (API key on server)
-    const r = await fetch('/api/claude-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!r.ok) {
-      const err = await r.text();
-      throw new Error(`Proxy error ${r.status}: ${err.slice(0,200)}`);
+  // Try active model first, then fallover if credit error
+  const modelsToTry = activeModel === 'claude'
+    ? ['claude', 'gemini']
+    : ['gemini', 'claude'];
+
+  let lastError = null;
+
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const model = modelsToTry[i];
+    const isFailover = i > 0;
+
+    try {
+      let data;
+
+      if (model === 'claude') {
+        // ── CLAUDE path ──────────────────────────────────────────
+        if (isNetlify) {
+          const r = await fetch('/api/claude-proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...payload, model: MODEL_CONFIG.claude.model })
+          });
+          if (!r.ok) {
+            const errText = await r.text();
+            throw new Error(`Proxy error ${r.status}: ${errText.slice(0,200)}`);
+          }
+          data = await r.json();
+        } else {
+          const key = getApiKey();
+          if (!key) { showApiKeyModal(); throw new Error('API key required'); }
+          const r = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({ ...payload, model: MODEL_CONFIG.claude.model })
+          });
+          data = await r.json();
+          if (data.error) throw new Error(data.error.message || 'Claude API error');
+        }
+        if (isFailover) {
+          showFailoverToast('gemini', 'claude');
+          setModel('claude', true);
+        }
+        return normalizeResponse(data, 'claude');
+
+      } else {
+        // ── GEMINI path ──────────────────────────────────────────
+        const gemKey = _geminiKey || localStorage.getItem('ascor_gemini_key') || '';
+        if (!gemKey) {
+          showGeminiKeyModal();
+          throw new Error('Gemini API key required');
+        }
+        const geminiPayload = toGeminiPayload(payload);
+        const model_id = MODEL_CONFIG.gemini.model;
+        let r;
+        if (isNetlify) {
+          r = await fetch('/api/claude-proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...geminiPayload, _provider: 'gemini', _model: model_id })
+          });
+        } else {
+          r = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model_id}:generateContent?key=${gemKey}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiPayload) }
+          );
+        }
+        data = await r.json();
+        if (data.error) throw new Error(data.error.message || 'Gemini API error');
+        if (isFailover) {
+          showFailoverToast('claude', 'gemini');
+          setModel('gemini', true);
+        }
+        return normalizeResponse(data, 'gemini');
+      }
+
+    } catch(e) {
+      lastError = e;
+      const msg = e.message || '';
+      log(`${model === 'claude' ? 'Claude' : 'Gemini'} error: ${msg.slice(0,80)}`, 'error');
+
+      // Only failover if it's a credit/quota error AND there's another model to try
+      if (isLowCreditError(msg) && i < modelsToTry.length - 1) {
+        log(`Credit limit detected — failing over to ${modelsToTry[i+1]}...`, 'warn');
+        continue; // try next model
+      }
+      throw e; // non-credit error or last model — surface it
     }
-    return await r.json();
-  } else {
-    // Standalone / local — call Anthropic directly with user-supplied key
-    const key = getApiKey();
-    if (!key) {
-      showApiKeyModal();
-      throw new Error('API key required — please enter your Anthropic API key.');
-    }
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(payload)
-    });
-    const d = await r.json();
-    if (d.error) throw new Error(`API error: ${d.error.message}`);
-    return d;
   }
+  throw lastError;
 }
 
 function showApiKeyModal() {
@@ -1329,11 +1764,13 @@ function formatMd(t) {
 // ═══════════════════════
 // COLLAPSIBLE PANELS
 // ═══════════════════════
+function isMobile() { return window.innerWidth <= 768; }
+
 function togglePanel(side) {
+  if (isMobile()) { toggleDrawer(side); return; }
   if (side === 'left') {
     const panel = document.getElementById('panelLeft');
     const collapsed = panel.classList.toggle('collapsed');
-    // Swap button visibility
     document.getElementById('btnLeft').style.display  = collapsed ? 'none' : 'flex';
     document.getElementById('btnLeftC').style.display = collapsed ? 'flex' : 'none';
   } else {
@@ -1343,6 +1780,41 @@ function togglePanel(side) {
     document.getElementById('btnRightC').style.display = collapsed ? 'flex' : 'none';
   }
 }
+
+function toggleDrawer(side) {
+  const panelLeft  = document.getElementById('panelLeft');
+  const panelRight = document.getElementById('panelRight');
+  const backdrop   = document.getElementById('drawerBackdrop');
+  const fabLeft    = document.getElementById('fabLeft');
+  const fabRight   = document.getElementById('fabRight');
+
+  if (side === 'left') {
+    const isOpen = panelLeft.classList.toggle('mobile-open');
+    if (isOpen) panelRight.classList.remove('mobile-open');
+    backdrop.classList.toggle('active', isOpen);
+    fabLeft?.classList.toggle('active', isOpen);
+    fabRight?.classList.remove('active');
+  } else {
+    const isOpen = panelRight.classList.toggle('mobile-open');
+    if (isOpen) panelLeft.classList.remove('mobile-open');
+    backdrop.classList.toggle('active', isOpen);
+    fabRight?.classList.toggle('active', isOpen);
+    fabLeft?.classList.remove('active');
+  }
+}
+
+function closeAllDrawers() {
+  document.getElementById('panelLeft')?.classList.remove('mobile-open');
+  document.getElementById('panelRight')?.classList.remove('mobile-open');
+  document.getElementById('drawerBackdrop')?.classList.remove('active');
+  document.getElementById('fabLeft')?.classList.remove('active');
+  document.getElementById('fabRight')?.classList.remove('active');
+}
+
+// Auto-collapse panels on resize
+window.addEventListener('resize', () => {
+  if (!isMobile()) closeAllDrawers();
+});
 
 // ═══════════════════════
 // INIT
